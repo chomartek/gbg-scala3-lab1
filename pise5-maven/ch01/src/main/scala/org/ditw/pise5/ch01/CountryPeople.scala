@@ -1,7 +1,6 @@
 package org.ditw.pise5.ch01
 
 object CountryPeople {
-  case class Country(name: String, code: String)
   case class Person(name: String, countryCode: String)
 
   def main(args: Array[String]): Unit = {

@@ -7,6 +7,8 @@ object Maps:
   def main(args: Array[String]): Unit = {
     val m1 = Map("Sweden" -> "Stockholm")
     traceMap(m1)
+    val m11 = Map.apply("Sweden".->("Stockholm"))
+    println(m11 == m1)
     val m2 = Map("Sweden" -> "Stockholm", "UK" -> "London")
     traceMap(m2)
 
