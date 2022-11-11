@@ -33,5 +33,53 @@ object Chap3_4 {
     val m3 = m1.map(p => s"${p._1}: ${p._2}")
     println(m3)
     println(s"m3 type: ${m3.getClass.getSimpleName}")
+
+    val noReturn = pointOfNoReturn()
+    println(s"pointOfNoReturn: $noReturn")
   }
+
+  // scala 2
+  class ChecksumAcc2 {
+    // protected var sum = 0
+    // private[ch03] var sum = 0
+    private var sum = 0
+//    def add(b: Byte): Unit = {
+//      sum += b
+//    }
+    def add(b: Byte): Unit = sum += b
+//    def checksum(): Int = {
+//      return ~(sum & 0xFF) + 1
+//    }
+    def checksum(): Int = ~(sum & 0xFF) + 1
+  }
+
+  def pointOfNoReturn(): Int = {
+    try {
+      val l1 = List(1, 2, 4)
+      var sum = 0
+      l1.foreach { e =>
+        sum += e
+        return sum
+      }
+      sum
+    } catch {
+      case ex: Exception =>
+        println(s"ex: $ex")
+        -1
+      case th: Throwable =>
+        println(s"th: $th")
+        -2
+    }
+
+  }
+
+//  println("test access modifier private[Chap3_4]: " + (new ChecksumAcc2).sum)
+
+//  class ChecksumAcc2X extends ChecksumAcc2 {
+//    def getSum: Int = sum
+//  }
+
+  // scala 3
+  class ChecksumAcc3:
+    var sum = 0
 }
