@@ -2,6 +2,23 @@ package org.ditw.pise5.ch03
 
 object Chap3_4 {
 
+  case class Person(val name: String, val age: Int)
+  object Person {
+    def unapply(person: Person): Option[(String, Int)] = {
+      println("In unapply")
+      Some(person.name -> (person.age - 2))
+    }
+  }
+
+  import Person._
+  def isAdult(person: Person): Boolean = person match {
+    case Person(name: String, age: Int) if age >= 18 => true
+    case _ => false
+  }
+
+  val johnIsAdult = isAdult(Person("John", 19))
+  println(s"johnIsAdult: $johnIsAdult")
+
   def main(args: Array[String]): Unit = {
     val intArray = Array(1, 2, 3)
     for (i <- 0 until intArray.length) {
