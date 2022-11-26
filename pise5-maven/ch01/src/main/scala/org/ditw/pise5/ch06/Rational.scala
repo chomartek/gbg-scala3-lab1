@@ -21,7 +21,7 @@ class Rational(n: Int, d: Int) {
 
   def this(n: Int) = {
     this(n, 1)
-    println(s"denom = 1")
+    // println(s"denom = 1")
   }
 }
 
