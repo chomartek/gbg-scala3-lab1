@@ -73,7 +73,7 @@ object Ch7 {
     result
   }
   println(div1(5, 0))
-  println(div1(5, 4))
+  println(div1(15, 4))
 
 
   // 7. match expressions
@@ -84,7 +84,7 @@ object Ch7 {
   }
 
   println(div2(5, 0))
-  println(div2(5, 4))
+  println(div2(15, 4))
 
   // 7.2 de-construction of case class
   case class Person(name: String, age: Int)
@@ -137,6 +137,25 @@ object Ch7 {
 
   // 8 no break / continue
   val params = Array("-f", "-x", "Test.scala", "param1")
+
+  import scala.util.control.Breaks._
+  var i = 0; // This is Java
+  var foundIt = false
+  breakable {
+    while (i < params.length) {
+      if (params(i).startsWith("-")) {
+        i = i + 1
+      }
+      if (params(i).endsWith(".scala")) {
+        foundIt = true
+        println(s"Found! Breaking...")
+        break
+      }
+      i = i + 1
+    }
+  }
+  println(s"foundIt: $foundIt, i: $i")
+  
   val res1 = params.find(arg => !arg.startsWith("-") && arg.endsWith(".scala"))
   println(res1)
   val res2 = params.indices.find(idx => !params(idx).startsWith("-") && params(idx).endsWith(".scala"))
