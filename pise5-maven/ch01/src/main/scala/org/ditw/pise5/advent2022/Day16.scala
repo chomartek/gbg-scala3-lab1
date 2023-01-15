@@ -72,4 +72,14 @@ object Day16 {
                 |Valve PI has flow rate=0; tunnels lead to valves ES, HH
                 |Valve WV has flow rate=11; tunnels lead to valves WR, HQ
                 |Valve HF has flow rate=0; tunnels lead to valves OL, WR""".stripMargin
+  case class FlowSum(moveSteps: Int, flow: Int) {
+    def calc(time: Int): Int = {
+      if (time > moveSteps + 1) {
+        (time - moveSteps - 1) * flow
+      } else {
+        0
+      }
+    }
+  }
+
 }
