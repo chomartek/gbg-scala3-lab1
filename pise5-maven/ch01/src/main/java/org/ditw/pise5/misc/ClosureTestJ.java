@@ -1,20 +1,21 @@
 package org.ditw.pise5.misc;
 
 import java.util.*;
+import java.util.function.Function;
 
 public class ClosureTestJ {
     // https://stackoverflow.com/questions/750486/javascript-closure-inside-loops-simple-practical-example
     public static void main(String[] args) {
-        List<String> verbs = Arrays.asList("Hi", "Hey");
-        List<String> names = Arrays.asList("John", "Jane");
-        names.stream().forEach(name -> {
-            verbs.stream().forEach(verb -> System.out.printf("%s %s!\n", verb, name));
-        });
+        int more = 10;
+        Function<Integer, Integer> closure1 = new Function<>() {
+            @Override
+            public Integer apply(Integer x) {
+                return x + more;
+            }
+        };
 
-//        String name;
-//        for (String n : names) {
-//            name = n;
-//            verbs.stream().forEach(verb -> System.out.printf("%s %s!\n", verb, name));
-//        }
+        // more = 20;
+
+        System.out.println(closure1.apply(2));
     }
 }
