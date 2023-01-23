@@ -3,29 +3,35 @@ package org.ditw.pise5.ch08
 object Ch8_WR {
   private def trace(v: Any): Unit =
     println(s"v = $v, type: ${v.getClass.getSimpleName}")
+
   // 1. method
-  def convertToOrdinal(num: Int): String = {
-    num match {
-      case 1 => "first"
-      case 2 => "second"
-      case 3 => "third"
-      case _ => num + "th"
-    }
-  }
+//  def convertToOrdinal(num: Int): String = {
+//    num match {
+//      case 1 => "first"
+//      case 2 => "second"
+//      case 3 => "third"
+//      case _ => num + "th"
+//    }
+//  }
+//
+//  case class NumWrapper(num: Int) {
+//    def toOridinal: String = convertToOrdinal(num)
+//  }
 
-  case class NumWrapper(num: Int) {
-    def toOridinal: String = convertToOrdinal(num)
-  }
-
-  // function within function
+  // 2. local function: function within function
 //  def convertToOrdinalFixed(num: Int): String = {
 //    def lastDigitToOrdinalPostfix(n: Int): String = {
+//      val d = n / 10
 //      val rem = n % 10
-//      rem match {
-//        case 1 => "st"
-//        case 2 => "nd"
-//        case 3 => "rd"
-//        case _ => "th"
+//      if (d > 1) {
+//        rem match {
+//          case 1 => "st"
+//          case 2 => "nd"
+//          case 3 => "rd"
+//          case _ => "th"
+//        }
+//      } else {
+//        "th"
 //      }
 //    }
 //
@@ -36,37 +42,34 @@ object Ch8_WR {
 //      case _ => num + lastDigitToOrdinalPostfix(num)
 //    }
 //  }
-
-//  def convertToOrdinalFixed(num: Int): String = {
-//    def lastDigitToOrdinalPostfix: String = {
-//      val rem = num % 10
-//      rem match {
-//        case 1 => "st"
-//        case 2 => "nd"
-//        case 3 => "rd"
-//        case _ => "th"
-//      }
-//    }
 //
-//    num match {
-//      case 1 => "first"
-//      case 2 => "second"
-//      case 3 => "third"
-//      case _ => num + lastDigitToOrdinalPostfix
-//    }
-//  }
+//  println(convertToOrdinalFixed(1))
+//  println(convertToOrdinalFixed(11))
+//  println(convertToOrdinalFixed(21))
+//
+//  println(convertToOrdinalFixed(4))
+//  println(convertToOrdinalFixed(14))
+//  println(convertToOrdinalFixed(24))
 
   // 3 first-class functions
   def convertToOrdinalFixed(num: Int): String = {
+    // Every function value is an instance of one of several FunctionN traits in package scala,
+    //   such as Function0 for functions with no parameters, Function1 for functions with one
+    //   parameter, and so on.
     val lastDigitToOrdinalPostfix =
       // function literal: definition
-      () => {
-        val rem = num % 10
-        rem match {
-          case 1 => "st"
-          case 2 => "nd"
-          case 3 => "rd"
-          case _ => "th"
+      (n: Int) => {
+        val d = n / 10
+        val rem = n % 10
+        if (d > 1) {
+          rem match {
+            case 1 => "st"
+            case 2 => "nd"
+            case 3 => "rd"
+            case _ => "th"
+          }
+        } else {
+          "th"
         }
       }
 
@@ -74,12 +77,12 @@ object Ch8_WR {
       case 1 => "first"
       case 2 => "second"
       case 3 => "third"
-      case _ => num + lastDigitToOrdinalPostfix() // function value: instantiated at runtime
+      case _ => num + lastDigitToOrdinalPostfix(num) // function value: instantiated at runtime
     }
   }
 
-  // 3.1 .foreach
-//  val numList = List(1, 3, 6, 21, 24)
+  // 3.1 .foreach .filter
+//  val numList = List(1, 3, 6, 11, 21)
 //  val printFn = (n: Int) => println(convertToOrdinalFixed(n))
 //  numList.foreach(printFn)
 //  val isEvenFn = (n: Int) => n % 2 == 0
@@ -88,17 +91,18 @@ object Ch8_WR {
 //  println(evenNumList)
 
   // 4. short forms
-//  val numList = List(1, 3, 6, 21, 24)
+//  val numList = List(1, 3, 6, 11, 21)
+//  //  target typing
 //  val evenNumList = numList.filter(n => n % 2 == 0)
 //  println(evenNumList)
 
   // 5. placeholder syntax
-  val numList = List(1, 3, 6, 21, 24)
-  val evenNumList = numList.filter(_ % 2 == 0)
-  println(evenNumList)
-
-  val sum: Int = numList.fold(0)(_ + _)
-  println(sum)
+//  val numList = List(1, 3, 6, 11, 21)
+//  val evenNumList = numList.filter(_ % 2 == 0)
+//  println(evenNumList)
+//
+//  val sum: Int = numList.fold(0)(_ + _)
+//  println(sum)
 
   // 6. partially applied function
   //  "apply the function to the arguments"
@@ -136,9 +140,8 @@ object Ch8_WR {
   // 6.2 Eta-expansion
   //   https://docs.scala-lang.org/scala3/book/fun-eta-expansion.html
   //   https://docs.scala-lang.org/scala3/reference/changed-features/eta-expansion-spec.html#
-//  val sum3Eta = sumMd _
-//  // val sum3Eta = sumMd
-//  println(sum3Eta(1, 3, 4))
+//  def isEven(n: Int): Boolean = n % 2 == 0
+//  List(1, 3, 5, 4).filter(isEven)
 
   // 7. closures
 //  var more = 10
@@ -165,7 +168,7 @@ object Ch8_WR {
   // 8 special function call forms
   // 8.1 repeated parameters
 //  def sumx(values: Int*) = {
-//    trace(values)
+////    trace(values)
 //    values.sum
 //  }
 //  println(sumx(1, 2, 3))
