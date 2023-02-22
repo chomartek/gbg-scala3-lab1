@@ -4,9 +4,37 @@ import org.apache.commons.io.IOUtils
 
 import java.io.{FileInputStream, InputStream}
 import java.nio.charset.StandardCharsets
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
+import scala.util.Random
 
 object Ch9 {
+  // 1 control abstraction
+  // 1.1 data abstraction vs control abstraction
+  abstract class Person {
+    def getId: String
+    def indentify(): Boolean
+  }
 
+  class PersonWithSSN(ssn: String) extends Person {
+    override def getId: String = ssn
+
+    override def indentify(): Boolean = {
+      // identify with ssn
+      ???
+    }
+  }
+
+  class PersonWithPassport(passportNumber: String) extends Person {
+    override def getId: String = passportNumber
+
+    override def indentify(): Boolean = {
+      // identify with passport number
+      ???
+    }
+  }
+
+  // 2 high order functions
   import collection.JavaConverters._
   private def readLogLines(logPath: String): List[String] = {
     val logStrm = new FileInputStream(logPath)
@@ -14,64 +42,63 @@ object Ch9 {
     logStrm.close()
     lines.asScala.toList
   }
+  val logLines = readLogLines("log4j-active.txt")
 
-  // 1. high order functions
-  def lineStartingWith(lines: Iterable[String], starting: String): Iterable[String] = {
-    lines.filter(_.startsWith(starting))
+  def lineContaining(lines: List[String], containStr: String): List[String] = {
+    lines.filter(line => line.contains(containStr))
   }
 
-  def lineContaining(lines: Iterable[String], substring: String): Iterable[String] = {
-    lines.filter(_.contains(substring))
-  }
+  //  val tmp1 = lineContaining(logLines, "FairSchedulableBuilder")
+  //  tmp1.foreach(println)
 
-  def lineRegex(lines: Iterable[String], regex: String): Iterable[String] = {
+  def lineStartingWith(lines: List[String], startStr: String): List[String] = {
+    lines.filter(_.startsWith(startStr))
+  }
+  val tmp2 = lineStartingWith(logLines, "\tat ")
+  tmp2.take(5).foreach(println)
+
+  def lineMatchesRegex(lines: List[String], regex: String): List[String] = {
     lines.filter(_.matches(regex))
   }
 
   def lineMatches(
-    lines: Iterable[String],
-    matcher: (String, String) => Boolean,
-    matcherParam: String
-  ): Iterable[String] = {
+                   lines: List[String],
+                   matcher: (String, String) => Boolean,
+                   matcherParam: String
+                 ): List[String] = {
     lines.filter(line => matcher(line, matcherParam))
   }
+  val tmp11 = lineMatches(logLines,
+    (line, containStr) => line.startsWith(containStr),
+    "\tat ")
+  println()
+  tmp11.take(5).foreach(println)
 
-  val logLines = readLogLinesInLoanPattern("log4j-active.txt")
-
-//  val filtered1 = lineStartingWith(logLines, "\tat")
-//  println("---- filtered1 ----")
-//  filtered1.take(5).foreach(println)
-//  val filtered11 = lineMatches(logLines, _.startsWith(_), "\tat")
-//  println("---- filtered11 ----")
-//  filtered11.take(5).foreach(println)
-//
-//  val filtered2 = lineContaining(logLines, "FairSchedulableBuilder")
-//  filtered2.take(5).foreach(println)
-//  val filtered21 = lineMatches(logLines, _.contains(_), "FairSchedulableBuilder")
-//  filtered21.take(5).foreach(println)
-
-
-  type LineFilter = String => Boolean
-  def lineFilter(lines: Iterable[String], lineFilters: List[LineFilter]): Iterable[String] = {
+  def filterLogLines(
+                      lines: List[String],
+                      filters: List[String => Boolean]
+                    ): List[String] = {
     var result = lines
-    lineFilters.foreach { lineFilter =>
-      result = result.filter(lineFilter)
+    filters.foreach { f =>
+      result = result.filter(f)
     }
     result
   }
 
-  val cleanedLogLines = lineFilter(logLines,
+  val cleanedLogLines = filterLogLines(
+    logLines,
     List(
-      // excluding lines containing a set of words
+      !_.startsWith("\tat "),
       line =>
-        !Set("FairSchedulableBuilder", "DeltaParquetFileFormat", "spark.sql.hive.convertCTAS").exists(line.contains),
-      !_.startsWith("\tat")
+        !Set("FairSchedulableBuilder", "DeltaParquetFileFormat", "spark.sql.hive.convertCTAS").exists(line.contains)
     )
   )
 
-  cleanedLogLines.foreach(println)
+  println("========= Cleaned log lines: ")
+  cleanedLogLines.take(10).foreach(println)
 
-  // 2. control abstraction in Scala collection API
+  // 3. control abstraction in Scala collection API
+  // .exist .forall .find .sortBy ...
   def containsNeg(num: List[Int]): Boolean = {
     var exists = false
     num.foreach { n =>
@@ -87,84 +114,90 @@ object Ch9 {
     }
     exists
   }
-  def containsNeg1(num: List[Int]): Boolean = num.exists(_ < 0)
-  def containsOdd1(num: List[Int]): Boolean = num.exists(_ % 2 == 1)
 
-  val t11 = List("aa", "ba", "ca").forall(_.contains("a"))
-  val t12 = List("aa", "ba", "ca").forall(s => s.contains("a") && s.length == 2)
-  println(t11)
-  println(t12)
+  val strList = List("aab", "baba", "ca")
+  strList.forall(_.contains("a")) // true
+  strList.forall(_.contains("b")) // false
+  strList.find(_.matches("^b")) // "ba"
+  strList.sortBy(_.length) // "ca", "aab", "baba"
 
-  val t2 = List("aa", "ba", "ca").find(_.contains("b"))
-  println(t2)
-  val t3 = List("aaa", "baba", "ca").sortBy(_.length)
-  println(t3)
-
-  // 3 currying
+  // 4 currying
   def curriedSum(x: Int)(y: Int) = x + y
-  def curriedSum1: Function1[Int, Int] = curriedSum(1) // 1 + y
-  def curriedSum2: Int = curriedSum1(2) // 1 + 2
+  val curriedSum1: Function[Int, Int] = curriedSum(1)
+  val curriedSum2: Int = curriedSum1(2) // 3
 
-  // 4 new control structure
+  // 5 new control structure
   // the loan pattern
-  private def logReader[T](logPath: String)(reader: InputStream => T): T = {
-    var logStrm: InputStream = null
+  //   with in python
+  //     with open("/path/to/file", mode="w") as file:
+  //       file.write(...)
+  //   using in C#
+  //     using(var reader = new SomeReader()) {
+  //       ...
+  //     }
+  def readWithLoanPattern[T](path: String)(reader: InputStream => T): T = {
+    var strm: InputStream = null
     try {
-      logStrm = new FileInputStream(logPath)
-      reader(logStrm)
+      strm = new FileInputStream(path)
+      reader(strm)
     } finally {
-      if (logStrm != null) {
-        logStrm.close()
+      if (strm != null) {
+        strm.close()
       }
     }
-//    val lines = IOUtils.readLines(logStrm, StandardCharsets.UTF_8)
-//    logStrm.close()
-//    lines.asScala.toList
   }
 
-  def readLogLinesInLoanPattern(logPath: String): List[String] = {
-    logReader(logPath) { logStrm =>
-      IOUtils.readLines(logStrm, StandardCharsets.UTF_8)
+  def readLogLinesWithLoanPattern(path: String): List[String] = {
+    readWithLoanPattern(path) { strm =>
+      IOUtils.readLines(strm, StandardCharsets.UTF_8)
         .asScala
         .toList
     }
   }
 
-  //  def curriedSum(x: Int)(y: Int)(z: Int) = x + y + z
-//  val curriedSum1: Function1[Int, Function1[Int, Int]] = curriedSum(1)
-//  // def curriedSum1(y: Int)(z: Int) = 1 + y + z
-//  val curriedSum2: Function1[Int, Int] = curriedSum1(2)
-//  val curriedSum3: Int = curriedSum2(3)
-//  println(curriedSum1)
-//  println(curriedSum2)
-//  println(curriedSum3)
 
-  //  def timer[R](op: => R): (R, Long) = {
-//    val startTime = System.currentTimeMillis()
-//    val result = op
-//    val endTime = System.currentTimeMillis()
-//    result -> (endTime - startTime)
-//  }
-//
-//  val r = timer {
-//    Thread.sleep(800)
-//    "Done"
-//  }
-//
-//  println(s"Timer result: $r")
-//
-//  def when(cond: Boolean)(action: => Unit) = {
-//    if (cond) action
-//  }
-//
-//  var t = 1
-//  when(t == 1) {
-//    println("t == 1")
-//  }
-//  t = 3
-//  when(t == 2) {
-//    println("t == 2")
-//  }
+  // 6. by-name param
+  // 6.1. vs by-value param
+  def delayed[T](delayMs: Int)(action: () => T): T = {
+    Thread.sleep(delayMs)
+    action()
+  }
+
+  delayed(1000) { () =>
+    Random.nextInt()
+  }
+
+  def delayedByName[T](delayMs: Int)(action: => T): T = {
+    Thread.sleep(delayMs)
+    action
+  }
+  delayedByName(1000) {
+    Random.nextInt()
+  }
+
+  def runTwice(action: => Int) = {
+    action*action
+  }
+
+  var x = 2
+  val result = runTwice {
+    x = x*x
+    x
+  }
+  println(result)
+
+  // 6.2. test framework
+
+  // 3. Future
+  import concurrent.ExecutionContext.Implicits.global
+
+  val future1 = Future {
+    Thread.sleep(500)
+    "Future has come"
+  }
+
+  val futureResult = Await.result(future1, Duration.Inf)
+  println("futureResult: " + futureResult)
 
   def main(args: Array[String]): Unit = {
 
