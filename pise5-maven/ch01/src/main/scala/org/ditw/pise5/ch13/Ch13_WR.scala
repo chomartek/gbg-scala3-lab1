@@ -98,6 +98,56 @@ object Ch13_WR {
   val person:Person = tupled(tp)
   println(person)
 
+  // curried form
+  case class PersonEx(firstName: String, lastName: String)
+                     (val middleName: String = "")
+
+  val personEx0 = PersonEx("John", "Smith")
+  val personEx1 = PersonEx("John", "Smith")("A")
+  val personEx2 = PersonEx("John", "Smith")("T")
+  println(personEx2.middleName)
+  println(s"personEx0 == personEx1: ${personEx0 == personEx1}")
+  println(s"personEx2 == personEx1: ${personEx2 == personEx1}")
+
+  case class PersonFamily(firstName: String)(implicit val lastName: String) {
+    override def toString: String = s"PersonFamily(firstName=$firstName,lastName=$lastName)"
+  }
+  object FamilySmith {
+    implicit val familyName: String = "Smith"
+    def person(firstName: String): PersonFamily = PersonFamily(firstName)
+  }
+
+  val johnSmith = FamilySmith.person("John")
+  val jamesSmith = FamilySmith.person("James")
+  println(johnSmith)
+  println(jamesSmith)
+
+  val firstName = johnSmith match {
+    case PersonFamily(fn) => fn
+  }
+  println(firstName)
+
+//  object PersonFamily {
+//    def unapply(person: PersonFamily): Some[(String, String)] =
+//      Some(person.firstName -> person.lastName)
+//  }
+//
+//  val lastName = johnSmith match {
+//    case PersonFamily(_, ln) => ln
+//  }
+//  println(lastName)
+
+//  // private constructor
+//  case class NaturalNum private (v: Int)
+//  object NaturalNum {
+//    def apply(v: Int): Option[NaturalNum] =
+//      if (v > 0) Option(new NaturalNum(v)) else None
+//  }
+//  val n1 = NaturalNum(2).get
+//  println(n1)
+//  val n2 = n1.copy(v = -12)
+//  println(n2)
+
   def main(args: Array[String]): Unit = {
 
   }
