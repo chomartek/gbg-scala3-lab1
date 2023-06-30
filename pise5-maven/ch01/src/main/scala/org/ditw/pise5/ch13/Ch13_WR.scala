@@ -148,6 +148,12 @@ object Ch13_WR {
 //  val n2 = n1.copy(v = -12)
 //  println(n2)
 
+  // trait Product
+  val firstElem = person.productElement(0)
+  val secondElem = person.productElement(1)
+  val elems = person.productArity
+  println(s"1st: $firstName, 2nd: $secondElem, #: $elems")
+
   def main(args: Array[String]): Unit = {
 
   }
