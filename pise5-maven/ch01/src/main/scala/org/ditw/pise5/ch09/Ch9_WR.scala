@@ -1,4 +1,4 @@
-package org.ditw.pise5.misc
+package org.ditw.pise5.ch09
 
 import org.apache.commons.io.IOUtils
 
@@ -8,28 +8,25 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import scala.util.Random
 
-object Ch9 {
+object Ch9_WR {
   // 1 control abstraction
   // 1.1 data abstraction vs control abstraction
   abstract class Person {
-    def getId: String
-    def indentify(): Boolean
+    def getId(): String
+    def identify(): Boolean // the process of verifying the identity of a person
   }
 
   class PersonWithSSN(ssn: String) extends Person {
-    override def getId: String = ssn
-
-    override def indentify(): Boolean = {
-      // identify with ssn
+    override def getId(): String = ssn
+    override def identify(): Boolean = {
+      // identity with ssn
       ???
     }
   }
-
-  class PersonWithPassport(passportNumber: String) extends Person {
-    override def getId: String = passportNumber
-
-    override def indentify(): Boolean = {
-      // identify with passport number
+  class PersonWithPassport(passport: String) extends Person {
+    override def getId(): String = passport
+    override def identify(): Boolean = {
+      // identify with passport
       ???
     }
   }
@@ -44,58 +41,48 @@ object Ch9 {
   }
   val logLines = readLogLines("log4j-active.txt")
 
-  def lineContaining(lines: List[String], containStr: String): List[String] = {
+  def linesContaining(lines: List[String], containStr: String): List[String] = {
     lines.filter(line => line.contains(containStr))
   }
-
-  //  val tmp1 = lineContaining(logLines, "FairSchedulableBuilder")
-  //  tmp1.foreach(println)
-
-  def lineStartingWith(lines: List[String], startStr: String): List[String] = {
-    lines.filter(_.startsWith(startStr))
+  def linesStartingWith(lines: List[String], startStr: String): List[String] = {
+    lines.filter(line => line.startsWith(startStr))
   }
-  val tmp2 = lineStartingWith(logLines, "\tat ")
-  tmp2.take(5).foreach(println)
-
-  def lineMatchesRegex(lines: List[String], regex: String): List[String] = {
-    lines.filter(_.matches(regex))
+  def linesMatchingRegex(lines: List[String], regex: String): List[String] = {
+    lines.filter(line => line.matches(regex))
   }
 
-  def lineMatches(
-                   lines: List[String],
-                   matcher: (String, String) => Boolean,
-                   matcherParam: String
-                 ): List[String] = {
+  def linesMatching(
+                     lines: List[String],
+                     matcher: (String, String) => Boolean,
+                     matcherParam: String
+                   ): List[String] = {
     lines.filter(line => matcher(line, matcherParam))
   }
-  val tmp11 = lineMatches(logLines,
-    (line, containStr) => line.startsWith(containStr),
-    "\tat ")
-  println()
-  tmp11.take(5).foreach(println)
+  // control abstraction: the behavior of testing a log line against a condition
 
-  def filterLogLines(
-                      lines: List[String],
-                      filters: List[String => Boolean]
-                    ): List[String] = {
-    var result = lines
-    filters.foreach { f =>
-      result = result.filter(f)
-    }
+  val contain1 = linesStartingWith(logLines, "\tat ")
+  contain1.take(5).foreach(println)
+  val contain2 = linesMatching(logLines, (line, startStr) => line.startsWith(startStr), "\tat ")
+  println()
+  contain2.take(5).foreach(println)
+
+  def cleanupLogs(logs: List[String], filters: List[String => Boolean]): List[String] = {
+    var result = logs
+    filters.foreach { f => result = result.filter( line => f(line) ) }
     result
   }
 
-  val cleanedLogLines = filterLogLines(
+  val cleanedLogs = cleanupLogs(
     logLines,
     List(
-      !_.startsWith("\tat "),
+      line => !line.startsWith("\tat "),
       line =>
-        !Set("FairSchedulableBuilder", "DeltaParquetFileFormat", "spark.sql.hive.convertCTAS").exists(line.contains)
+        Set("FairSchedulableBuilder", "DeltaParquetFileFormat", "AbfsClient", "spark.sql.hive.convertCTAS")
+          .exists(keyword => line.contains(keyword))
     )
   )
 
-  println("========= Cleaned log lines: ")
-  cleanedLogLines.take(10).foreach(println)
+  cleanedLogs.foreach(println)
 
   // 3. control abstraction in Scala collection API
   // .exist .forall .find .sortBy ...
@@ -106,7 +93,6 @@ object Ch9 {
     }
     exists
   }
-
   def containsOdd(num: List[Int]): Boolean = {
     var exists = false
     num.foreach { n =>
@@ -114,6 +100,9 @@ object Ch9 {
     }
     exists
   }
+
+  def containsNeg1(num: List[Int]) = num.exists(_ < 0)
+  def containsOdd1(num: List[Int]) = num.exists(_ % 2 == 1)
 
   val strList = List("aab", "baba", "ca")
   strList.forall(_.contains("a")) // true
@@ -126,9 +115,7 @@ object Ch9 {
   val curriedSum1: Function[Int, Int] = curriedSum(1)
   val curriedSum2: Int = curriedSum1(2) // 3
 
-
   // 5 new control structure
-
   // the loan pattern
   //   with in python
   //     with open("/path/to/file", mode="w") as file:
@@ -157,7 +144,6 @@ object Ch9 {
     }
   }
 
-
   // 6. by-name param
   // 6.1. vs by-value param
   def delayed[T](delayMs: Int)(action: () => T): T = {
@@ -178,7 +164,7 @@ object Ch9 {
   }
 
   def runTwice(action: => Int) = {
-    action*action
+    4*16
   }
 
   var x = 2

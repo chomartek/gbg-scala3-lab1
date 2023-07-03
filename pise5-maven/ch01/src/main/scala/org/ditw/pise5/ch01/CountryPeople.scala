@@ -1,8 +1,6 @@
 package org.ditw.pise5.ch01
-
+case class Person(name: String, countryCode: String)
 object CountryPeople {
-  case class Person(name: String, countryCode: String)
-
   def main(args: Array[String]): Unit = {
 
     val rvdcPeople = List(
