@@ -1,7 +1,8 @@
 package org.ditw.pise5.ch13
 
+import scala.reflect.{ClassTag, classTag}
+
 trait Expr
-// sealed trait Expr
 case class Var(name: String) extends Expr
 case class Num(number: Double) extends Expr
 case class UnOp(operator: String, arg: Expr) extends Expr
@@ -22,6 +23,11 @@ object Ch13_WR {
   println(var2)
 
   //  pattern matching
+  //  example: simplifying an expressoin
+  //    1. - (- expr) = expr
+  //    2. expr + 0 = expr
+  //    3. expr * 1 = expr
+  //    4. ...
   def simplifyExpr(expr: Expr): Expr = expr match {
     case UnOp("-", UnOp("-", expr2)) =>
       expr2
@@ -51,15 +57,93 @@ object Ch13_WR {
   println(t)
 
   // constructor pattern, deep matches
-
   // sequence pattern
 
-  // tuple pattern
+  val getFirst = (seq: Seq[Int]) => seq match {
+    case Seq(first, _) =>
+      Some(first)
+    case _ => None
+  }
+
+  val seq1 = Seq(11, 2)
+  println(s"getFirst($seq1): ${getFirst(seq1)}")
+  val seq0 = Seq[Int]()
+  println(s"getFirst($seq0): ${getFirst(seq0)}")
+
+
+  val seq2 = Seq(11, 2, 3)
+  println(s"getFirst($seq2): ${getFirst(seq2)}")
+  val getFirst2 = (seq: Seq[Int]) => seq match {
+    case Seq(first, _*) =>
+      Some(first)
+    case _ => None
+  }
+  println(s"getFirst2($seq1): ${getFirst2(seq1)}")
+  println(s"getFirst2($seq2): ${getFirst2(seq2)}")
+  println(s"getFirst2($seq0): ${getFirst2(seq0)}")
+
+  // tuple pattern ...
 
   // type pattern
+  val v1Trace = (v: Any) => v match {
+    case s: String =>
+      s"String type, value: $s"
+    case i: Int =>
+      s"Int type: value: $i"
+    case l: List[_] =>
+      s"List type: value: $l"
+    case _ =>
+      s"Unknown type: ${v.getClass.getTypeName}, value: $v"
+  }
+  println(v1Trace(12))
+  println(v1Trace("12"))
+  println(v1Trace(List(false)))
+  println(v1Trace(1 -> 2))
 
+  val v1TraceErasure = (v: Any) => v match {
+    case s: String =>
+      s"String type, value: $s"
+    case i: Int =>
+      s"Int type: value: $i"
+    case li: List[Int] =>
+      s"List[Int] type: value: $li"
+    case ls: List[String] =>
+      s"List[String] type: value: $ls"
+    case _ =>
+      s"Unknown type: ${v.getClass.getTypeName}, value: $v"
+  }
+  println(v1TraceErasure(List(12)))
+  println(v1TraceErasure(List("a", "b")))
   // type erasure
+  def v1TraceErasureList[T : ClassTag](v: List[T]): String = {
+    val tag = implicitly[ClassTag[T]]
+    val typeName = tag.runtimeClass.getTypeName
+    typeName match {
+      case "int" =>
+        s"List[Int]: $v"
+      case "long" =>
+        s"List[Long]: $v"
+      case "java.lang.String" =>
+        s"List[String]: $v"
+      case _ =>
+        s"Unknown type: $typeName, $v"
+    }
+//    v match {
+//      case li: List[_] if tag.toString() == "Int" =>
+//        s"List[Int]: value: $li"
+//      case li: List[_] if tag.toString() == "Long" =>
+//        s"List[Long]: value: $li"
+//      case ls: List[_]  if tag.runtimeClass.getTypeName == "java.lang.String" =>
+//        s"List[String]: value: $ls"
+//      case _ =>
+//        s"Unknown type: ${v.getClass.getTypeName}, value: $v"
+//    }
+  }
 
+  println(v1TraceErasureList(List(12)))
+  println(v1TraceErasureList(List(1L)))
+  println(v1TraceErasureList(List("a", "b")))
+  println(v1TraceErasureList(List(false)))
   // variable binding
 
   // 13.3 pattern guard
