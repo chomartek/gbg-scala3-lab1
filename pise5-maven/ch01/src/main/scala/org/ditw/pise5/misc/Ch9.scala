@@ -105,6 +105,16 @@ object Ch9 {
   def curriedSum1: Function1[Int, Int] = curriedSum(1) // 1 + y
   def curriedSum2: Int = curriedSum1(2) // 1 + 2
 
+
+  //  def curriedSum(x: Int)(y: Int)(z: Int) = x + y + z
+  //  val curriedSum1: Function1[Int, Function1[Int, Int]] = curriedSum(1)
+  //  // def curriedSum1(y: Int)(z: Int) = 1 + y + z
+  //  val curriedSum2: Function1[Int, Int] = curriedSum1(2)
+  //  val curriedSum3: Int = curriedSum2(3)
+  //  println(curriedSum1)
+  //  println(curriedSum2)
+  //  println(curriedSum3)
+
   // 4 new control structure
   // the loan pattern
   private def logReader[T](logPath: String)(reader: InputStream => T): T = {
@@ -117,9 +127,6 @@ object Ch9 {
         logStrm.close()
       }
     }
-//    val lines = IOUtils.readLines(logStrm, StandardCharsets.UTF_8)
-//    logStrm.close()
-//    lines.asScala.toList
   }
 
   def readLogLinesInLoanPattern(logPath: String): List[String] = {
@@ -130,14 +137,14 @@ object Ch9 {
     }
   }
 
-  //  def curriedSum(x: Int)(y: Int)(z: Int) = x + y + z
-//  val curriedSum1: Function1[Int, Function1[Int, Int]] = curriedSum(1)
-//  // def curriedSum1(y: Int)(z: Int) = 1 + y + z
-//  val curriedSum2: Function1[Int, Int] = curriedSum1(2)
-//  val curriedSum3: Int = curriedSum2(3)
-//  println(curriedSum1)
-//  println(curriedSum2)
-//  println(curriedSum3)
+  // 5 by-name parameter
+  def twice(op: => Int): Int = op * op
+
+  var x = 2
+  val r = twice { x = x*x; x }
+  println(s"r = $r")
+  println(s"x = $x")
+
 
   //  def timer[R](op: => R): (R, Long) = {
 //    val startTime = System.currentTimeMillis()
