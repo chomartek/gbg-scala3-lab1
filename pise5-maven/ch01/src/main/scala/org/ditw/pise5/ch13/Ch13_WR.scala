@@ -1,5 +1,6 @@
 package org.ditw.pise5.ch13
 
+import scala.math.{E, Pi}
 import scala.reflect.{ClassTag, classTag}
 
 trait Expr
@@ -48,13 +49,19 @@ object Ch13_WR {
   //   2. no fall through
   //   3. MatchError if none of the cases matches
 
-  var x = 1.0
-  val t = x match {
-    // case Pi => s"Pi == $x" // compilation error
-    case pi => s"Pi == $x"
-    case _ => s"something else"
+  // variable
+  //val constant = E
+  val constant = 1.0
+  constant match {
+    case Pi =>
+      println("constant Pi")
+    case E =>
+      println("constant E")
+    case pi =>
+      println(s"Non-constant: $pi")
+    //    case Pii =>
+    //      println(s"Non-constant: $Pii")
   }
-  println(t)
 
   // constructor pattern, deep matches
   // sequence pattern
@@ -128,16 +135,6 @@ object Ch13_WR {
       case _ =>
         s"Unknown type: $typeName, $v"
     }
-//    v match {
-//      case li: List[_] if tag.toString() == "Int" =>
-//        s"List[Int]: value: $li"
-//      case li: List[_] if tag.toString() == "Long" =>
-//        s"List[Long]: value: $li"
-//      case ls: List[_]  if tag.runtimeClass.getTypeName == "java.lang.String" =>
-//        s"List[String]: value: $ls"
-//      case _ =>
-//        s"Unknown type: ${v.getClass.getTypeName}, value: $v"
-//    }
   }
 
   println(v1TraceErasureList(List(12)))
@@ -145,10 +142,24 @@ object Ch13_WR {
   println(v1TraceErasureList(List("a", "b")))
   println(v1TraceErasureList(List(false)))
   // variable binding
+  val addExpr = BinOp("+", Var("x"), Var("y"))
+  val leftExpr = addExpr match {
+    case BinOp(_, le @ Var(_), _) =>
+      le
+  }
+  println(s"Left expression: $leftExpr")
 
   // 13.3 pattern guard
+  def simplifyExpr2(expr: Expr): Expr = expr match {
+    case BinOp("+", x, y) if x == y =>
+      BinOp("*", x, Num(2))
+    case _ => expr
+  }
+  val t2 = simplifyExpr2(BinOp("+", Var("x"), Var("x")))
+  println(s"simplifyExpr2 result: $t2")
 
   // 13.4 overlaps
+  //   put more specific matching rules before general ones
 
   // 13.5 sealed classes
   def completeCaseList(e: Expr): Unit = e match {
@@ -157,22 +168,42 @@ object Ch13_WR {
   }
   completeCaseList(var1)
 
-  // 13.6 Options
+  // 13.6 Options ...
 
   // 13.7 other pattern matchings
+  val tp1 = (1, true)
+  val (result, success) = tp1
 
-  // 13.8 a larger example
+  // case seq as partial function
+  val typeOf: Any => String =
+    case _: Int => "int"
+    case _: String => "string"
+
+  println(s"typeOf(12): ${typeOf(12)}")
+  // println(s"typeOf(12L): ${typeOf(12L)}")
+
+  // 13.8 a larger example ...
 
   // case classes extended
 
   // case object
   sealed trait Opt[+T]
-  case class Some[+T](v: T) extends Opt[T]
+  case class Som[+T](v: T) extends Opt[T]
+  // case class Non1 extends Opt[Nothing]
   case object Non extends Opt[Nothing]
-  var optInt: Opt[Int] = Some(12)
+  var optInt: Opt[Int] = Som(12)
   println(optInt)
   optInt = Non
   println(optInt)
+
+  abstract class Animal(`type`: String = "Unknown")
+  case class Cat(name: String) extends Animal("Cat")
+  case class Dog(name: String) extends Animal("Dog")
+  val cat = Cat("Kitty")
+  val ani = cat
+  val optCat: Opt[Cat] = Som(cat)
+  val optAni: Opt[Animal] = optCat
+  println(s"optAni: $optAni")
 
   // tuple
   // https://github.com/VirtusLab/unicorn/issues/11
