@@ -51,19 +51,20 @@ object Ch13_WR {
 
   // variable
   //val constant = E
-  val constant = 1.0
-  constant match {
-    case Pi =>
-      println("constant Pi")
-    case E =>
-      println("constant E")
-    case pi =>
-      println(s"Non-constant: $pi")
-    //    case Pii =>
-    //      println(s"Non-constant: $Pii")
-  }
+//  val constant = 1.0
+//  constant match {
+//    case Pi =>
+//      println("constant Pi")
+//    case E =>
+//      println("constant E")
+//    case pi =>
+//      println(s"Non-constant: $pi")
+//    //    case Pii =>
+//    //      println(s"Non-constant: $Pii")
+//  }
 
-  // constructor pattern
+  // constructor pattern ...
+
 //  // sequence pattern
 //  val getFirst = (seq: Seq[Int]) => seq match {
 //    case Seq(first, _) =>
@@ -142,11 +143,14 @@ object Ch13_WR {
 
   // variable binding
 //  val addExpr = BinOp("+", Var("x"), Var("y"))
-//  val leftExpr = addExpr match {
-//    case BinOp(_, le @ _, _) =>
-//      le
+////  val addExpr = BinOp("+", Num(4), Var("y"))
+//  val left = addExpr match {
+//    case BinOp(_, lv @ Var(_), _) =>
+//      s"Left variable: $lv"
+//    case BinOp(_, le, _) =>
+//      s"Left expression: $le"
 //  }
-//  println(s"Left expression: $leftExpr")
+//  println(left)
 
   // 13.3 pattern guard
 //  def simplifyExpr2(expr: Expr): Expr = expr match {
@@ -250,7 +254,7 @@ object Ch13_WR {
 ////  }
 ////  println(lastName)
 
-//  // private constructor
+//  // private constructor ...
 //  case class NaturalNum private (v: Int)
 //  object NaturalNum {
 //    def apply(v: Int): Option[NaturalNum] =
