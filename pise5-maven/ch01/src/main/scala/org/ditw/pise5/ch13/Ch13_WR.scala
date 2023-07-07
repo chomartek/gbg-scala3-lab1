@@ -55,17 +55,19 @@ object Ch13_WR {
   // 13.2 matching patterns
   // constant & variable
   //val constant = E
-  val constant = 1.0
-  constant match {
-    case Pi =>
-      println("constant Pi")
-    case E =>
-      println("constant E")
-    case pi =>
-      println(s"Non-constant: $pi")
-    //    case Pii =>
-    //      println(s"Non-constant: $Pii")
-  }
+//  val constant = 1.0
+//  constant match {
+//    case Pi =>
+//      println("constant Pi")
+//    case E =>
+//      println("constant E")
+//    case pi =>
+//      println(s"Non-constant: $pi")
+//    //    case Pii =>
+//    //      println(s"Non-constant: $Pii")
+//  }
+
+  // constructor pattern ...
 
   // sequence pattern
   val getFirst = (seq: Seq[Int]) => seq match {
@@ -262,7 +264,7 @@ object Ch13_WR {
 //  }
 //  println(lastName)
 
-//  // private constructor
+//  // private constructor ...
 //  case class NaturalNum private (v: Int)
 //  object NaturalNum {
 //    def apply(v: Int): Option[NaturalNum] =
