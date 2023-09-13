@@ -7,6 +7,13 @@ import scala.util.Random
 
 object Ch14WR {
 
+  private def profiling(note: String)(op: => Unit) = {
+    val startTs = System.currentTimeMillis()
+    op
+    val elapsed = (System.currentTimeMillis() - startTs) / 1000.0
+    println(f"[Profiling] $note elapsed $elapsed%.3f seconds")
+  }
+
   // 1. immutable & recursive
   //
 
@@ -109,26 +116,37 @@ object Ch14WR {
   println(left(2))
 
   // performance: list vs vector
-  //  private def sum1(nums: Seq[Int], iter: Int): Unit = {
-  //    var sum = 0L
-  //    val tsStart = System.currentTimeMillis()
-  //    (0 to iter).foreach { i =>
-  //      sum += nums(500000 + i)
-  //    }
-  //    val msElapsed = (System.currentTimeMillis() - tsStart) / 1000.0
-  //    println(s"Elapsed $msElapsed seconds, sum = $sum")
-  //  }
-  //
-  //  sum1((0 to 1000000).toList, 2000)
-  //  sum1((0 to 1000000).toVector, 2000)
+    private def sum1(notes: String, nums: Seq[Int], iter: Int): Unit = {
+      profiling(notes) {
+        var sum = 0L
+        (0 to iter).foreach { i =>
+          sum += nums(500000 + i)
+        }
+      }
+    }
+
+    sum1("List indexing: ", (0 to 1000000).toList, 2000)
+    sum1("Vector indexing: ", (0 to 1000000).toVector, 2000)
 
   // high-order methods
   //   map, flatMap, foreach
+  println(s"left increment: ${left.map(_ + 1)}")
+  println(s"left cloned x3 flattened: ${left.flatMap(i => List(i, i, i))}")
+  println(s"left cloned x3: ${left.map(i => List(i, i, i))}")
+
   //   filter ...
   //   forall, exists
   //   foldLeft, foldRight
+  //           op    s = "123"
+  //         op  3   s = "12"
+  //       op  2     s = "1"
+  //     ""  1       s = ""
   val concatFromLeft = left.foldLeft("")((s, i) => s + i.toString)
   println(s" concatFromLeft: $concatFromLeft")
+  //       op        s = "321"
+  //      1  op      s = "32"
+  //        2  op    s = "3"
+  //          3  ""  s = ""
   val concatFromRight = left.foldRight("")((i, s) => s + i.toString)
   println(s"concatFromRight: $concatFromRight")
   //   sortWith
@@ -137,11 +155,32 @@ object Ch14WR {
   val sorted1 = List(1, 12, -3, 2).sortWith(Math.abs(_) < Math.abs(_))
   println(sorted1)
 
-  // List object: creation ...
+  // Example: List reversal using fold
+  val list1 = List(2, 3, 4, 5)
+  val revList1 = list1.foldLeft(List[Int]())((s, i) => i :: s)
+  println(s"$list1 reversed: $revList1")
 
   // lazy zip
   val lz1 = List(1, 2).lazyZip(List('a', 'b'))
   println(lz1)
+
+  val lz1m = (1 to 10000000).map(_.toString).toList
+
+  def zipSample[T](src: List[T], count: Int) = {
+    profiling("Zip op") {
+      val zipped = src zip src
+      zipped.take(10)
+    }
+  }
+  zipSample(lz1m, 20)
+
+  def lazyZipSample[T](src: List[T], count: Int) = {
+    profiling("lazyZip op") {
+      val zipped = src lazyZip src
+      zipped.take(10)
+    }
+  }
+  lazyZipSample(lz1m, 20)
 
   // type reference
   def mysort[T](less: (T, T) => Boolean)
