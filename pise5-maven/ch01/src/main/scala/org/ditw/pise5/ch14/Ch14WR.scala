@@ -27,6 +27,9 @@ object Ch14WR {
   // The list type in Scala is covariant. This means that for each pair of
   //  types S and T, if S is a subtype of T, then List[S] is a subtype of List[T].
   //  For instance, List[String] is a subtype of List[Object].
+  val strList: List[String] = List("string", "list")
+  val anyList: List[AnyRef] = strList
+  println(anyList)
 
   // Nil: List[Nothing]
   // Nothing: bottom type
@@ -38,6 +41,7 @@ object Ch14WR {
 
   //                        String("abc")
   //             Nothing -> String
+  // def ::[B >: A](elem: B): List[B] =
   val tlst1: List[String] = "abc" :: Nil
   println(tlst1)
 
@@ -45,6 +49,7 @@ object Ch14WR {
   //             Nothing -> Int
   val tlst2: List[Any] = 1 :: Nil
 
+  //  most common ancestor
   //                        String("abc") -> AnyRef
   //      BigInt(1) -> ScalaNumber -> ... -> AnyRef
   val tlst3: List[AnyRef] = "abc" :: BigInt(1) :: Nil
@@ -55,9 +60,31 @@ object Ch14WR {
 
   //                        Int -> Any
   //    String("abc") -> AnyRef -> Any
-  //                        Int -> Any
-  val tlst5: List[Any] = 1 :: "abc" :: Nil
+    val tlst5: List[Any] = 1 :: "abc" :: Nil
 
+  // patterns
+  val con1 = List(1, 2)
+  val con2 = 1 :: List(2)
+  println(s"con1 == con2: ${con1 == con2}")
+
+  con1 match {
+    case 1 :: _ =>
+      println(s"$con1 is a list starting with 1")
+    case _ =>
+      println(s"default")
+  }
+
+  val con3 = ::(1, List(2))
+  println(s"con1 == con3: ${con1 == con3}")
+  println(s"::.unapply(con3): ${::.unapply(con3)}")
+
+  // first-order methods
+  //  high-order methods: functions as arguments
+  val l1 = List(1, 2, 3)
+  val l2 = List(4, 5)
+  println(s"${l1 ::: l2}")
+
+  //  Right association
   case class MyBuf[T](d: List[T]) {
     def #:(elem: T): MyBuf[T] = MyBuf(elem :: d)
   }
@@ -66,52 +93,34 @@ object Ch14WR {
   val buf2 = 23 #: buf1
   println(buf2)
 
-  // patterns
-  val con1 = ::(1, List(2))
-  println(con1)
-
-  con1 match {
-    case 1 :: _ =>
-      println(s"$con1 is a list starting with 1")
-    case _ =>
-      println(s"default")
-  }
-  println(s"::.unapply(con1) = ${::.unapply(con1)}")
-
-  // first-order methods
-  //   high-order methods: functions as arguments
-  val l1 = List(1, 2, 3)
-  val l2 = List(4, 5)
-  println(s"${l1 ::: l2}")
-
-  println(l1(2)) // not common to access element with indices
-  val seq1 = Seq(1, 2, 3)
-
-  // performance: list vs vector
-  private def sum1(nums: Seq[Int], iter: Int): Unit = {
-    var sum = 0L
-    val tsStart = System.currentTimeMillis()
-    (0 to iter).foreach { i =>
-      sum += nums(500000 + i)
-    }
-    val msElapsed = (System.currentTimeMillis() - tsStart) / 1000.0
-    println(s"Elapsed $msElapsed seconds, sum = $sum")
-  }
-
-//  sum1((0 to 1000000).toList, 2000)
-//  sum1((0 to 1000000).toVector, 2000)
-
   // zip
   val left = List(1, 2, 3)
   val right = List('a', 'b', 'b')
-  println(s"${left zip right}")
+  println(s"left zip right: ${left zip right}")
 
   // mkString
   println(s"left: ${left.mkString("[", ", ", "]")}")
   val rand = Random(12)
   val passcodes = (0 to 1000).map(_ => rand.nextInt())
-  val samples = passcodes.take(20).toList
+  val samples = passcodes.take(10).toList
   println(s"Sample passcodes: ${samples.mkString("\n\t", "\n\t", "")}")
+
+  // not common to access element with indices
+  println(left(2))
+
+  // performance: list vs vector
+  //  private def sum1(nums: Seq[Int], iter: Int): Unit = {
+  //    var sum = 0L
+  //    val tsStart = System.currentTimeMillis()
+  //    (0 to iter).foreach { i =>
+  //      sum += nums(500000 + i)
+  //    }
+  //    val msElapsed = (System.currentTimeMillis() - tsStart) / 1000.0
+  //    println(s"Elapsed $msElapsed seconds, sum = $sum")
+  //  }
+  //
+  //  sum1((0 to 1000000).toList, 2000)
+  //  sum1((0 to 1000000).toVector, 2000)
 
   // high-order methods
   //   map, flatMap, foreach
@@ -135,18 +144,18 @@ object Ch14WR {
   println(lz1)
 
   // type reference
-  def msort[T](less: (T, T) => Boolean)
+  def mysort[T](less: (T, T) => Boolean)
               (xs: List[T]): List[T] = xs.sortWith(less)
 
-  def msort1[T](xs: List[T])(less: (T, T) => Boolean): List[T] = xs.sortWith(less)
+  def mysort1[T](xs: List[T])(less: (T, T) => Boolean): List[T] = xs.sortWith(less)
 
 
   val abcd = List('a', 'c', 'd', 'b')
   val sort1 = abcd.sortWith(_ > _)
   // msort(_ > _)(abcd)
 //  msort(_ > _)(abcd)
-  println(s" msort(abcd): ${msort[Char](_ < _)(abcd)}")
-  println(s"msort1(abcd): ${msort1(abcd)(_ < _)}")
+  println(s" msort(abcd): ${mysort[Char](_ < _)(abcd)}")
+  println(s"msort1(abcd): ${mysort1(abcd)(_ < _)}")
 
   // using Ordering?
   import math.Ordered.orderingToOrdered
