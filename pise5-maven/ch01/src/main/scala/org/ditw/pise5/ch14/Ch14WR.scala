@@ -1,5 +1,6 @@
 package org.ditw.pise5.ch14
 
+import java.io.InputStream
 import scala.collection.immutable.LinearSeq
 import scala.collection.mutable.ListBuffer
 import scala.math.ScalaNumber
@@ -23,6 +24,11 @@ object Ch14WR {
   val lst1 = List(1, 2, 3)
   // lst(2) = 4
 
+  // head - tail
+  //         |
+  //        head - tail
+  //                |
+  //               head - tail
   val lst2 = (1 to 5).toList
   var tail = lst2.tail
   while (tail.nonEmpty) {
@@ -33,37 +39,49 @@ object Ch14WR {
   // 2. covariant
   // The list type in Scala is covariant. This means that for each pair of
   //  types S and T, if S is a subtype of T, then List[S] is a subtype of List[T].
-  //  For instance, List[String] is a subtype of List[Object].
+  //  For instance, List[String] is a subtype of List[AnyRef] because String is a subtype of AnyRef
   val strList: List[String] = List("string", "list")
   val anyList: List[AnyRef] = strList
   println(anyList)
 
   // Nil: List[Nothing]
   // Nothing: bottom type
-  println(s"List() == Nil: ${List() == Nil}")
-  println(s"List() eq Nil: ${List().eq(Nil)}")
+  //  https://docs.scala-lang.org/resources/images/tour/unified-types-diagram.svg
+  val intList: List[Int] = List[Nothing]()
+  val bigIntList: List[BigInt] = List[Nothing]()
+  val streamList: List[InputStream] = List[Nothing]()
 
-  var tmpList1: List[String] = Nil
-  val tmpList2: List[Int] = Nil
+  println(s"intList == bigIntList: ${intList == bigIntList}")
+  println(s"intList eq bigIntList: ${intList.eq(bigIntList)}")
+  println(s"intList eq Nil: ${intList.eq(Nil)}")
 
-  //                        String("abc")
-  //             Nothing -> String
+  // None: Option[Nothing]
+
+  // 3. Constructing lists
+
+  // Cons operator
   // def ::[B >: A](elem: B): List[B] =
   val tlst1: List[String] = "abc" :: Nil
   println(tlst1)
+  //                        String("abc")
+  //             Nothing -> String
 
   //                        Int -> Any
   //             Nothing -> Int
   val tlst2: List[Any] = 1 :: Nil
 
-  //  most common ancestor
-  //                        String("abc") -> AnyRef
-  //      BigInt(1) -> ScalaNumber -> ... -> AnyRef
-  val tlst3: List[AnyRef] = "abc" :: BigInt(1) :: Nil
+  val list12 = List(1, 2)
+  val list122 = 1 :: List(2)
+  println(s"list12 == list12: ${list12 == list12}")
 
   //  BigDecimal(3.5) -> ScalaNumber -> ... -> AnyRef
   //        BigInt(1) -> ScalaNumber -> ...
   val tlst4: List[ScalaNumber] = List(BigDecimal(3.5), BigInt(1))
+
+  //  most common ancestor
+  //                        String("abc") -> AnyRef
+  //      BigInt(1) -> ScalaNumber -> ... -> AnyRef
+  val tlst3: List[AnyRef] = "abc" :: BigInt(1) :: Nil
 
   //                        Int -> Any
   //    String("abc") -> AnyRef -> Any
@@ -71,9 +89,6 @@ object Ch14WR {
 
   // patterns
   val con1 = List(1, 2)
-  val con2 = 1 :: List(2)
-  println(s"con1 == con2: ${con1 == con2}")
-
   con1 match {
     case 1 :: _ =>
       println(s"$con1 is a list starting with 1")
@@ -81,9 +96,9 @@ object Ch14WR {
       println(s"default")
   }
 
-  val con3 = ::(1, List(2))
-  println(s"con1 == con3: ${con1 == con3}")
-  println(s"::.unapply(con3): ${::.unapply(con3)}")
+  val con2 = ::(1, List(2))
+  println(s"con1 == con3: ${con1 == con2}")
+  println(s"::.unapply(con3): ${::.unapply(con2)}")
 
   // first-order methods
   //  high-order methods: functions as arguments
@@ -193,13 +208,32 @@ object Ch14WR {
   val sort1 = abcd.sortWith(_ > _)
   // msort(_ > _)(abcd)
 //  msort(_ > _)(abcd)
-  println(s" msort(abcd): ${mysort[Char](_ < _)(abcd)}")
-  println(s"msort1(abcd): ${mysort1(abcd)(_ < _)}")
+  println(s" mysort(abcd): ${mysort[Char](_ < _)(abcd)}")
+  println(s"mysort1(abcd): ${mysort1(abcd)(_ < _)}")
+  // library design principle:
+  //   When designing a polymorphic method that takes some non-function arguments and a function argument,
+  //   place the function argument last.
 
-  // using Ordering?
+  def mysort2[T](xs: List[T])(ord: T => Ordered[T]): List[T] = xs.sortWith((a, b) => ord(a) < b)
+  val charToOrdered = (c: Char) => new Ordered[Char] {
+    override def compare(that: Char): Int = c - that
+  }
+  println(s"mysort2(abcd): ${mysort2(abcd)(charToOrdered)}")
+  val list321 = List(3, 2, 1)
+  val intToOrdered = (i: Int) => new Ordered[Int] {
+    override def compare(that: Int): Int = i - that
+  }
+  println(s"mysort2(list321): ${mysort2(list321)(intToOrdered)}")
   import math.Ordered.orderingToOrdered
-  def msort2[T](xs: List[T])(using Ordering[T]): List[T] = xs.sortWith(_ < _)
-  println(s"msort2(abcd): ${msort2(abcd)}")
+  def mysort3[T](xs: List[T])(implicit ord: T => Ordered[T]): List[T] = xs.sortWith(_ < _)
+  println(s"mysort3(abcd): ${mysort3(abcd)}")
+//  val charOrdering: Ordering[Char] = implicitly[Ordering[Char]]
+//  implicit val charOrdered: Char => Ordered[Char] = c => orderingToOrdered(c)
+
+  // using Ordering
+  def mysort4[T](xs: List[T])(using Ordering[T]): List[T] = xs.sortWith(_ < _)
+  println(s"mysort4(abcd): ${mysort4(abcd)}")
+  // println(charOrdering)
 
 
   def main(args: Array[String]): Unit = {
