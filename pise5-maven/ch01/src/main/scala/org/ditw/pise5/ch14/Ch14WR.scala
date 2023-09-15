@@ -1,6 +1,7 @@
 package org.ditw.pise5.ch14
 
 import java.io.InputStream
+import java.util
 import scala.collection.immutable.LinearSeq
 import scala.collection.mutable.ListBuffer
 import scala.math.ScalaNumber
@@ -18,11 +19,10 @@ object Ch14WR {
   // 1. immutable & recursive
   //
 
-  val arr1 = Array(1, 2, 3)
-  arr1(2) = 4
-  println(arr1.mkString(","))
+  val jlist: java.util.List[Int] = util.Arrays.asList(1, 2, 3)
+  jlist.set(1, 15)
   val lst1 = List(1, 2, 3)
-  // lst(2) = 4
+  // lst1(1) = 15 -> lst1.update(index, newValue)
 
   // head - tail
   //         |
@@ -39,46 +39,56 @@ object Ch14WR {
   // 2. covariant
   // The list type in Scala is covariant. This means that for each pair of
   //  types S and T, if S is a subtype of T, then List[S] is a subtype of List[T].
-  //  For instance, List[String] is a subtype of List[AnyRef] because String is a subtype of AnyRef
+  //        Animal <-- Cat
+  //               <-- Dog
+  //  List[Animal] <-- List[Cat]
+  //               <-- List[Dog]
+  //  For instance, List[String] is a subtype of List[Object] because String is a subtype of Object
   val strList: List[String] = List("string", "list")
-  val anyList: List[AnyRef] = strList
+  val anyList: List[Object] = strList
   println(anyList)
 
-  // Nil: List[Nothing]
   // Nothing: bottom type
   //  https://docs.scala-lang.org/resources/images/tour/unified-types-diagram.svg
-  val intList: List[Int] = List[Nothing]()
+  val intList: List[Int] = List()
   val bigIntList: List[BigInt] = List[Nothing]()
   val streamList: List[InputStream] = List[Nothing]()
-
   println(s"intList == bigIntList: ${intList == bigIntList}")
   println(s"intList eq bigIntList: ${intList.eq(bigIntList)}")
-  println(s"intList eq Nil: ${intList.eq(Nil)}")
+
+  // Nil: List[Nothing]
+  println(s"List[]().eq(Nil): ${List[Nothing]().eq(Nil)}")
+  println(s"List[Nothing]().eq(Nil): ${List().eq(Nil)}")
+  val intList1: List[Int] = Nil
+  val bigIntList1: List[BigInt] = Nil
+  val streamList1: List[InputStream] = Nil
 
   // None: Option[Nothing]
 
   // 3. Constructing lists
-
   // Cons operator
   // def ::[B >: A](elem: B): List[B] =
+  //  'B >: A': B is a basetype of A
   val tlst1: List[String] = "abc" :: Nil
+  val tlst11 = Nil.::("abc")
+  //  A: Nothing, B: String -> def ::[String >: Nothing](elem: String): List[String]
   println(tlst1)
   //                        String("abc")
   //             Nothing -> String
 
   //                        Int -> Any
   //             Nothing -> Int
-  val tlst2: List[Any] = 1 :: Nil
+  val tlst2: List[Int] = 1 :: Nil
 
   val list12 = List(1, 2)
   val list122 = 1 :: List(2)
   println(s"list12 == list12: ${list12 == list12}")
 
+  // most recent common ancestor:
   //  BigDecimal(3.5) -> ScalaNumber -> ... -> AnyRef
   //        BigInt(1) -> ScalaNumber -> ...
   val tlst4: List[ScalaNumber] = List(BigDecimal(3.5), BigInt(1))
 
-  //  most common ancestor
   //                        String("abc") -> AnyRef
   //      BigInt(1) -> ScalaNumber -> ... -> AnyRef
   val tlst3: List[AnyRef] = "abc" :: BigInt(1) :: Nil
@@ -96,9 +106,8 @@ object Ch14WR {
       println(s"default")
   }
 
-  val con2 = ::(1, List(2))
-  println(s"con1 == con3: ${con1 == con2}")
-  println(s"::.unapply(con3): ${::.unapply(con2)}")
+  val con2 = ::(1, List(2)) // constructor pattern
+  println(s"con1 == con2: ${con1 == con2}")
 
   // first-order methods
   //  high-order methods: functions as arguments
@@ -112,7 +121,7 @@ object Ch14WR {
   }
 
   val buf1 = MyBuf(List(1))
-  val buf2 = 23 #: buf1
+  val buf2 = 23 #: buf1  // val list = 1 :: Nil
   println(buf2)
 
   // zip
@@ -128,7 +137,7 @@ object Ch14WR {
   println(s"Sample passcodes: ${samples.mkString("\n\t", "\n\t", "")}")
 
   // not common to access element with indices
-  println(left(2))
+//  println(left.apply(2))
 
   // performance: list vs vector
     private def sum1(notes: String, nums: Seq[Int], iter: Int): Unit = {
@@ -140,8 +149,10 @@ object Ch14WR {
       }
     }
 
-    sum1("List indexing: ", (0 to 1000000).toList, 2000)
-    sum1("Vector indexing: ", (0 to 1000000).toVector, 2000)
+//    sum1("List indexing: ", (0 to 1000000).toList, 2000)
+//    sum1("Vector indexing: ", (0 to 1000000).toVector, 2000)
+
+
 
   // high-order methods
   //   map, flatMap, foreach
@@ -206,7 +217,7 @@ object Ch14WR {
 
   val abcd = List('a', 'c', 'd', 'b')
   val sort1 = abcd.sortWith(_ > _)
-  // msort(_ > _)(abcd)
+//   msort(_ > _)(abcd)
 //  msort(_ > _)(abcd)
   println(s" mysort(abcd): ${mysort[Char](_ < _)(abcd)}")
   println(s"mysort1(abcd): ${mysort1(abcd)(_ < _)}")
@@ -230,7 +241,7 @@ object Ch14WR {
 //  val charOrdering: Ordering[Char] = implicitly[Ordering[Char]]
 //  implicit val charOrdered: Char => Ordered[Char] = c => orderingToOrdered(c)
 
-  // using Ordering
+  // using Ordering, scala 3
   def mysort4[T](xs: List[T])(using Ordering[T]): List[T] = xs.sortWith(_ < _)
   println(s"mysort4(abcd): ${mysort4(abcd)}")
   // println(charOrdering)
